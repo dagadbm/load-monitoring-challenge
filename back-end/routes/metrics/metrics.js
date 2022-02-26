@@ -6,10 +6,8 @@ module.exports = async function (fastify, opts) {
     const cpus = os.cpus().length;
     const cpusAvg = os.loadavg();
     const loadAverage = cpusAvg[0] / cpus;
-    const now = new Date();
-    return { 
-      utc: now.toUTCString(),
-      iso: now.toISOString(),
+    return {
+      timestamp: Date.now(),
       cpusAvg,
       loadAverage,
     };
