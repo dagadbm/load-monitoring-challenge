@@ -9,15 +9,26 @@ const MAX_SAMPLES = 60;
 // every 10 seconds (approximately)
 const POOLING_RATE = 10 * 1000;
 
+export const DEFAULT_THRESHOLD = 0.7;
+
 interface MetricsState {
   cpuAverage: ScatterDataPoint[],
   poolingId: number | undefined,
+  threshold: number,
 }
 
 const initialState: MetricsState = {
   cpuAverage: [],
   poolingId: undefined,
+  threshold: DEFAULT_THRESHOLD,
 };
+
+export const fetchCPUAverageAsync = createAsyncThunk(
+  'metrics/fetchCPUAverage',
+  async () => {
+    return await fetchCPUAverage();
+  }
+);
 
 export const poolCPUAverageAsync = createAsyncThunk(
   'metrics/poolCPUAverage',
@@ -28,12 +39,7 @@ export const poolCPUAverageAsync = createAsyncThunk(
 
 export const stopPooling = createAction('metrics/stopPolling');
 
-export const fetchCPUAverageAsync = createAsyncThunk(
-  'metrics/fetchCPUAverage',
-  async () => {
-    return await fetchCPUAverage();
-  }
-);
+export const setThreshold = createAction<number>('metrics/setThreshold');
 
 export const metricsSlice = createSlice({
   name: 'metrics',
@@ -41,13 +47,6 @@ export const metricsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(poolCPUAverageAsync.fulfilled, (state, action) => {
-        state.poolingId = action.payload;
-      })
-      .addCase(stopPooling, (state) => {
-        window.clearInterval(state.poolingId);
-        state.poolingId = undefined;
-      })
       .addCase(fetchCPUAverageAsync.fulfilled, (state, action) => {
         const { timestamp, loadAverage } = action.payload;
         state.cpuAverage.push({
@@ -58,17 +57,22 @@ export const metricsSlice = createSlice({
           state.cpuAverage.shift();
         }
       })
-      // TODO: handle failure cases
-      .addCase(fetchCPUAverageAsync.rejected, () => {
-
+      .addCase(poolCPUAverageAsync.fulfilled, (state, action) => {
+        state.poolingId = action.payload;
+      })
+      .addCase(stopPooling, (state) => {
+        window.clearInterval(state.poolingId);
+        state.poolingId = undefined;
+      })
+      .addCase(setThreshold, (state, action) => {
+        state.threshold = action.payload;
       })
       .addDefaultCase(() => {})
+
   },
 });
 
-// The function below is called a selector and allows us to select a value from
-// the state. Selectors can also be defined inline where they're used instead of
-// in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
 export const selectCPUAverage = (state: RootState) => state.metrics.cpuAverage;
+export const selectThreshold = (state: RootState) => state.metrics.threshold;
 
 export default metricsSlice.reducer;
