@@ -14,5 +14,16 @@ export function Threshold() {
     dispatch(setThreshold(debouncedThreshold));
   }, [dispatch, debouncedThreshold]);
 
-  return <input step="0.1" min="0.1" max="1" type="range" onChange={(e) => setValue(+e.target.value)} />;
+  const onChange = (event : React.ChangeEvent<HTMLInputElement>) => {
+    const threshold = +event.target.value;
+    if (threshold >= 1) {
+      setValue(1);
+    } else if (threshold <= 0) {
+      setValue(0.1);
+    } else {
+      setValue(threshold);
+    }
+  };
+
+  return <input step="0.1" min="0.1" max="1" type="range" onChange={onChange} />;
 }
