@@ -132,5 +132,6 @@ export const metricsSlice = createSlice({
 
 export const selectCPUAverage = (state: RootState) => state.metrics.cpuAverage;
 export const selectThreshold = (state: RootState) => state.metrics.threshold;
+export const selectAlertStatus = (state: RootState) => state.metrics.alertStatus;
 
 export default metricsSlice.reducer;
