@@ -1,12 +1,8 @@
 import React from 'react';
-import { Chart } from './features/metrics/Chart';
-import { Threshold } from './features/metrics/Threshold';
+import { Metrics } from './features/metrics';
 
 function App() {
-   return (<>
-      <Threshold />
-      <Chart />
-   </>);
+   return <Metrics />;
 }
 
 export default App;
