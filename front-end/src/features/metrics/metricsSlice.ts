@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, createAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, createAction, current } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { fetchCPUAverage } from './metricsAPI';
 import { ScatterDataPoint } from 'chart.js';
@@ -9,18 +9,40 @@ const MAX_SAMPLES = 60;
 // every 10 seconds (approximately)
 const POOLING_RATE = 10 * 1000;
 
+// minimum delta to raise alert
+const MINIMUM_ALERT_DELTA = 120 * 1000;
+
 export const DEFAULT_THRESHOLD = 0.7;
 
 interface MetricsState {
   cpuAverage: ScatterDataPoint[],
-  poolingId: number | undefined,
+  poolingId: number | null,
   threshold: number,
+  alert: Alert | null,
+  alertStatus: AlertStatus,
+  alertHistory: Alert[],
+}
+
+interface Alert {
+  timestampStart: number,
+  timestampEnd: number | null,
+  timestampAlertDelta: number | null,
+  currentThreshold: number,
+}
+
+export enum AlertStatus {
+  none = 'NONE',
+  start = 'START',
+  end = 'END',
 }
 
 const initialState: MetricsState = {
   cpuAverage: [],
-  poolingId: undefined,
+  poolingId: null,
   threshold: DEFAULT_THRESHOLD,
+  alert: null,
+  alertStatus: AlertStatus.none,
+  alertHistory: [],
 };
 
 export const fetchCPUAverageAsync = createAsyncThunk(
@@ -56,19 +78,55 @@ export const metricsSlice = createSlice({
         if (state.cpuAverage.length > MAX_SAMPLES) {
           state.cpuAverage.shift();
         }
+
+        if (loadAverage >= state.threshold) {
+          if (!state.alert) {
+            state.alert = {
+              timestampStart: timestamp,
+              timestampEnd: null,
+              timestampAlertDelta: null,
+              currentThreshold: state.threshold,
+            };
+            state.alertStatus = AlertStatus.none;
+          }
+
+          if (timestamp - state.alert.timestampStart >= MINIMUM_ALERT_DELTA) {
+            state.alert.timestampAlertDelta = timestamp;
+            state.alertStatus = AlertStatus.start;
+          }
+        } else if (loadAverage < state.threshold) {
+          if (state.alert) {
+            state.alert.timestampEnd = timestamp;
+
+            if (timestamp - state.alert.timestampStart >= MINIMUM_ALERT_DELTA) {
+              state.alert.timestampAlertDelta = timestamp;
+              state.alertStatus = AlertStatus.start;
+            }
+
+            if(state.alert.timestampAlertDelta) {
+              state.alertHistory.push(state.alert);
+              state.alert = null;
+              state.alertStatus = AlertStatus.end;
+            }
+          }
+        }
       })
       .addCase(poolCPUAverageAsync.fulfilled, (state, action) => {
         state.poolingId = action.payload;
       })
       .addCase(stopPooling, (state) => {
-        window.clearInterval(state.poolingId);
-        state.poolingId = undefined;
+        if (state.poolingId !== null) {
+          window.clearInterval(state.poolingId);
+        }
+
+        state.poolingId = null;
       })
       .addCase(setThreshold, (state, action) => {
         state.threshold = action.payload;
+        state.alert = null;
+        state.alertStatus = AlertStatus.none;
       })
       .addDefaultCase(() => {})
-
   },
 });
 
