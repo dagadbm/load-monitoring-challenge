@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, createAction, current } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, createAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { fetchCPUAverage } from './metricsAPI';
 import { ScatterDataPoint } from 'chart.js';
@@ -27,7 +27,7 @@ interface Alert {
   timestampStart: number,
   timestampEnd: number | null,
   timestampAlertDelta: number | null,
-  currentThreshold: number,
+  threshold: number,
 }
 
 export enum AlertStatus {
@@ -85,7 +85,7 @@ export const metricsSlice = createSlice({
               timestampStart: timestamp,
               timestampEnd: null,
               timestampAlertDelta: null,
-              currentThreshold: state.threshold,
+              threshold: state.threshold,
             };
             state.alertStatus = AlertStatus.none;
           }
@@ -133,5 +133,6 @@ export const metricsSlice = createSlice({
 export const selectCPUAverage = (state: RootState) => state.metrics.cpuAverage;
 export const selectThreshold = (state: RootState) => state.metrics.threshold;
 export const selectAlertStatus = (state: RootState) => state.metrics.alertStatus;
+export const selectAlertHistory = (state: RootState) => state.metrics.alertHistory;
 
 export default metricsSlice.reducer;
