@@ -2,20 +2,27 @@ import React from 'react';
 import { selectAlertHistory } from './metricsSlice';
 import { useAppSelector } from '../../app/hooks';
 
+const formatTimestamp = (timestamp: number) => {
+  const date = new Date(timestamp);
+  return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+}
 export function AlertHistory() {
   const alertHistory = useAppSelector(selectAlertHistory);
 
   return <table>
-    <tr>
+    <thead>
+      <tr>
       <th>Start</th>
       <th>End</th>
       <th>Threshold</th>
-    </tr>
+      </tr>
+    </thead>
+    <tbody>
     {alertHistory.length
       ? alertHistory.map((alert) =>
       <tr>
-        <td>{new Date(alert.timestampStart).toUTCString()}</td>
-        <td>{new Date(alert.timestampEnd as number).toUTCString()}</td>
+        <td>{formatTimestamp(alert.timestampStart)}</td>
+        <td>{formatTimestamp(alert.timestampEnd as number)}</td>
         <td>{alert.threshold}</td>
       </tr>
       )
@@ -26,5 +33,6 @@ export function AlertHistory() {
         <td>N/A</td>
       </tr>
     }
+    </tbody>
   </table>
 }

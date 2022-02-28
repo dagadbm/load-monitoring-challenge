@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   AlertStatus,
   selectAlertStatus,
@@ -23,9 +23,13 @@ function sendNotification(message: string) {
   }
 }
 
-export function useNotification() {
+export function Notification() {
   const alertStatus = useAppSelector(selectAlertStatus);
   const threshold = useAppSelector(selectThreshold);
+
+  const handleClick = () => {
+    window.Notification.requestPermission();
+  }
 
   useEffect(() => {
     switch (alertStatus) {
@@ -40,4 +44,6 @@ export function useNotification() {
         break;
     }
   }, [alertStatus, threshold]);
+
+  return <button type='button' onClick={handleClick}>Notify me</button>
 }

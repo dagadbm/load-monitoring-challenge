@@ -42,10 +42,10 @@ export function Chart() {
           labels: [],
           datasets: [
             {
-              label: 'CPU Average',
+              label: 'CPU Load Average',
               data: dataPoints,
-              fill: false,
-              borderColor: 'rgb(75, 192, 192)',
+              borderColor: '#7EB26D',
+              backgroundColor: '#7EB26D',
               tension: 0.1,
               parsing: false,
               normalized: true,
@@ -56,16 +56,18 @@ export function Chart() {
           scales: {
             x: {
               type: 'timeseries',
-              min: Date.now(),
               time: {
                 unit: 'minute',
+                minUnit: 'second',
+                displayFormats: {
+                  minute: 'HH:mm',
+                },
               },
             },
             y: {
-              type: 'logarithmic',
-              min: 0,
-              max: 1,
-            }
+              type: 'linear',
+              min: 0.1,
+            },
           },
           plugins: {
             annotation: {
@@ -74,13 +76,13 @@ export function Chart() {
                   type: 'line',
                   value: threshold,
                   scaleID: 'y',
-                  borderColor: 'rgb(255, 99, 132)',
+                  borderColor: '#BF1B00',
                   borderWidth: 2,
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       });
     }
   };

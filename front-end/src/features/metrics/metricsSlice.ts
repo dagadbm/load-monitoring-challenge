@@ -26,7 +26,6 @@ interface MetricsState {
 interface Alert {
   timestampStart: number,
   timestampEnd: number | null,
-  timestampAlertDelta: number | null,
   threshold: number,
 }
 
@@ -84,29 +83,25 @@ export const metricsSlice = createSlice({
             state.alert = {
               timestampStart: timestamp,
               timestampEnd: null,
-              timestampAlertDelta: null,
               threshold: state.threshold,
             };
             state.alertStatus = AlertStatus.none;
           }
 
           if (timestamp - state.alert.timestampStart >= MINIMUM_ALERT_DELTA) {
-            state.alert.timestampAlertDelta = timestamp;
             state.alertStatus = AlertStatus.start;
           }
         } else if (loadAverage < state.threshold) {
           if (state.alert) {
             state.alert.timestampEnd = timestamp;
 
-            if (timestamp - state.alert.timestampStart >= MINIMUM_ALERT_DELTA) {
-              state.alert.timestampAlertDelta = timestamp;
-              state.alertStatus = AlertStatus.start;
-            }
-
-            if(state.alert.timestampAlertDelta) {
+            if(state.alertStatus === AlertStatus.start) {
               state.alertHistory.push(state.alert);
               state.alert = null;
               state.alertStatus = AlertStatus.end;
+            } else {
+              state.alert = null;
+              state.alertStatus = AlertStatus.none;
             }
           }
         }
