@@ -2,11 +2,11 @@ import React from 'react';
 import { Notification } from './Notification';
 import { render, waitFor, screen, user, mockApi } from 'test-utils';
 import {
-  MINIMUM_ALERT_DELTA,
+  DEFAULT_ALERT_DELTA,
   fetchCPUAverageAsync,
   setThreshold,
+  setAlertDelta,
 } from './metricsSlice';
-
 
 let restoreNotification: any;
 beforeAll(() => {
@@ -50,7 +50,7 @@ test('notifies if an alert happened', async () => {
   })
 
   mockApi({
-    timestamp: 100000000000000 + MINIMUM_ALERT_DELTA,
+    timestamp: 100000000000000 + DEFAULT_ALERT_DELTA,
     loadAverage: 0.5,
   });
   store.dispatch(fetchCPUAverageAsync());
@@ -60,7 +60,7 @@ test('notifies if an alert happened', async () => {
   })
 
   mockApi({
-    timestamp: 100000000000000 + MINIMUM_ALERT_DELTA + 1,
+    timestamp: 100000000000000 + DEFAULT_ALERT_DELTA + 1,
     loadAverage: 0.4,
   });
   store.dispatch(fetchCPUAverageAsync());
@@ -89,12 +89,42 @@ test('does not notify if cpu load does not last more than 2 minutes', async () =
   })
 
   mockApi({
-    timestamp: 100000000000000 + MINIMUM_ALERT_DELTA - 1,
+    timestamp: 100000000000000 + DEFAULT_ALERT_DELTA - 1,
     loadAverage: 0.5,
   });
   store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
     expect(window.Notification).not.toHaveBeenCalled();
+  })
+});
+
+test('notify with custom alert delta', async () => {
+  const { store } = render(<Notification />);
+
+  // @ts-expect-error
+  window.Notification = jest.fn();
+  expect(window.Notification).not.toHaveBeenCalled();
+
+  store.dispatch(setThreshold(0.5));
+  store.dispatch(setAlertDelta(30 * 1000));
+  mockApi({
+    timestamp: 100000000000000,
+    loadAverage: 0.5,
+  });
+  store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).not.toHaveBeenCalled();
+  })
+
+  mockApi({
+    timestamp: 100000000000000 + 30 * 1000,
+    loadAverage: 0.5,
+  });
+  store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for 2 minutes or more');
   })
 });

@@ -10,7 +10,7 @@ const MAX_SAMPLES = 60;
 export const POOLING_RATE = 10 * 1000;
 
 // minimum delta to raise alert
-export const MINIMUM_ALERT_DELTA = 120 * 1000;
+export const DEFAULT_ALERT_DELTA = 120 * 1000;
 
 export const DEFAULT_THRESHOLD = 0.7;
 
@@ -18,6 +18,7 @@ interface MetricsState {
   cpuAverage: ScatterDataPoint[],
   poolingId: number | null,
   threshold: number,
+  alertDelta: number,
   alert: Alert | null,
   alertStatus: AlertStatus,
   alertHistory: Alert[],
@@ -40,6 +41,7 @@ const initialState: MetricsState = {
   poolingId: null,
   threshold: DEFAULT_THRESHOLD,
   alert: null,
+  alertDelta: DEFAULT_ALERT_DELTA,
   alertStatus: AlertStatus.none,
   alertHistory: [],
 };
@@ -61,6 +63,8 @@ export const poolCPUAverageAsync = createAsyncThunk(
 export const stopPooling = createAction('metrics/stopPolling');
 
 export const setThreshold = createAction<number>('metrics/setThreshold');
+
+export const setAlertDelta = createAction<number>('metrics/setAlertDelta');
 
 export const metricsSlice = createSlice({
   name: 'metrics',
@@ -91,7 +95,7 @@ export const metricsSlice = createSlice({
             state.alertStatus = AlertStatus.none;
           }
 
-          if (timestamp - state.alert.timestampStart >= MINIMUM_ALERT_DELTA) {
+          if (timestamp - state.alert.timestampStart >= state.alertDelta) {
             state.alertStatus = AlertStatus.start;
           }
         // high load is ending
@@ -126,12 +130,18 @@ export const metricsSlice = createSlice({
         state.alert = null;
         state.alertStatus = AlertStatus.none;
       })
+      .addCase(setAlertDelta, (state, action) => {
+        state.alertDelta = action.payload;
+        state.alert = null;
+        state.alertStatus = AlertStatus.none;
+      })
       .addDefaultCase(() => {})
   },
 });
 
 export const selectCPUAverage = (state: RootState) => state.metrics.cpuAverage;
 export const selectThreshold = (state: RootState) => state.metrics.threshold;
+export const selectAlertDelta = (state: RootState) => state.metrics.alertDelta;
 export const selectAlertStatus = (state: RootState) => state.metrics.alertStatus;
 export const selectAlertHistory = (state: RootState) => state.metrics.alertHistory;
 
