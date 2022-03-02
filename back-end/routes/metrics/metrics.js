@@ -8,7 +8,6 @@ module.exports = async function (fastify, opts) {
     const loadAverage = cpusAvg[0] / cpus;
     return {
       timestamp: Date.now(),
-      cpusAvg,
       loadAverage,
     };
   })
