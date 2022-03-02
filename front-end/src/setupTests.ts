@@ -3,3 +3,16 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom/extend-expect';
+import { server } from 'test-utils';
+
+// to support fetch properly on node so we dont have issues with fake timers
+import 'isomorphic-fetch';
+
+// Enable API mocking before tests.
+beforeAll(() => server.listen())
+
+// Reset any runtime request handlers we may add during the tests.
+afterEach(() => server.resetHandlers())
+
+// Disable API mocking after the tests are done.
+afterAll(() => server.close())
