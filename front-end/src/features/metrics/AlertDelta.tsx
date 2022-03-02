@@ -3,7 +3,8 @@ import {
   DEFAULT_ALERT_DELTA,
   setAlertDelta,
 } from './metricsSlice';
-import { useAppDispatch, useDebounce } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
+import { useDebounce } from './useDebounce';
 
 export function AlertDelta() {
   const [value, setValue] = useState<number>(DEFAULT_ALERT_DELTA / 1000);

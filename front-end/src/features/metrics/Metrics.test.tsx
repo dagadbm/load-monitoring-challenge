@@ -14,7 +14,7 @@ test('Metrics renders and updates state', async () => {
   });
   const { store } = render(<Metrics />);
 
-  expect(screen.getByText('Alerting')).toBeInTheDocument();
+  expect(screen.getByText('Alert History')).toBeInTheDocument();
   await waitFor(() => {
     expect(store.getState().metrics.cpuAverage).toEqual([{
       x: 100000000000000,

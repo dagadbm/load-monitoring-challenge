@@ -30,8 +30,8 @@ export function Notification() {
   const alertStatus = useAppSelector(selectAlertStatus);
   const threshold = useAppSelector(selectThreshold);
   const alertDeltaMinutes = useAppSelector(selectAlertDeltaMinutes);
-  const [showIcon, setShowIcon] = useState(false);
-  const [canNotify, setCanNotify] = useState(false);
+  const [showIcon, setShowIcon] = useState(window.Notification?.permission !== 'default' ?? true);
+  const [canNotify, setCanNotify] = useState(window.Notification?.permission === 'granted' ?? false);
 
   const handlePermissionState = (state: PermissionState) => {
     switch (state) {

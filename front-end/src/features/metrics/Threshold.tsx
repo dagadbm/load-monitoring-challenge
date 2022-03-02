@@ -3,7 +3,8 @@ import {
   DEFAULT_THRESHOLD,
   setThreshold,
 } from './metricsSlice';
-import { useAppDispatch, useDebounce } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
+import { useDebounce } from './useDebounce';
 
 export function Threshold() {
   const [value, setValue] = useState<number>(DEFAULT_THRESHOLD);

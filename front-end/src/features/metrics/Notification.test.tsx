@@ -17,25 +17,28 @@ afterAll(() => {
 });
 
 test('prompt Notification', async () => {
-  render(<Notification />);
-
   const requestPermission = jest.fn().mockReturnValue(true);
   // @ts-expect-error
   window.Notification = {
     requestPermission,
   };
 
-  await user.click(screen.getByRole('button'));
+  render(<Notification />);
+
+  await user.click(screen.getByTestId('notification'));
   await waitFor(() => {
     expect(requestPermission).toHaveBeenCalledTimes(1);
   });
 });
 
 test('notifies if an alert happened', async () => {
-  const { store } = render(<Notification />);
-
   // @ts-expect-error
   window.Notification = jest.fn();
+  // @ts-expect-error
+  window.Notification.permission = 'granted';
+
+  const { store } = render(<Notification />);
+
   expect(window.Notification).not.toHaveBeenCalled();
 
   store.dispatch(setThreshold(0.5));
@@ -43,7 +46,7 @@ test('notifies if an alert happened', async () => {
     timestamp: 100000000000000,
     loadAverage: 0.5,
   });
-  store.dispatch(fetchCPUAverageAsync());
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
     expect(window.Notification).not.toHaveBeenCalled();
@@ -53,10 +56,10 @@ test('notifies if an alert happened', async () => {
     timestamp: 100000000000000 + DEFAULT_ALERT_DELTA,
     loadAverage: 0.5,
   });
-  store.dispatch(fetchCPUAverageAsync());
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for 2 minutes or more');
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 2 minutes or more');
   })
 
   mockApi({
@@ -71,10 +74,13 @@ test('notifies if an alert happened', async () => {
 });
 
 test('does not notify if cpu load does not last more than 2 minutes', async () => {
-  const { store } = render(<Notification />);
-
   // @ts-expect-error
   window.Notification = jest.fn();
+  // @ts-expect-error
+  window.Notification.permission = 'granted';
+
+  const { store } = render(<Notification />);
+
   expect(window.Notification).not.toHaveBeenCalled();
 
   store.dispatch(setThreshold(0.5));
@@ -100,10 +106,13 @@ test('does not notify if cpu load does not last more than 2 minutes', async () =
 });
 
 test('notify with custom alert delta', async () => {
-  const { store } = render(<Notification />);
-
   // @ts-expect-error
   window.Notification = jest.fn();
+  // @ts-expect-error
+  window.Notification.permission = 'granted';
+
+  const { store } = render(<Notification />);
+
   expect(window.Notification).not.toHaveBeenCalled();
 
   store.dispatch(setThreshold(0.5));
@@ -125,6 +134,6 @@ test('notify with custom alert delta', async () => {
   store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for 2 minutes or more');
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 0.5 minutes or more');
   })
 });

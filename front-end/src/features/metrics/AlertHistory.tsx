@@ -1,6 +1,7 @@
 import React from 'react';
 import { selectAlertHistory } from './metricsSlice';
 import { useAppSelector } from '../../app/hooks';
+import styles from './AlertHistory.module.scss';
 
 const formatTimestamp = (timestamp: number) => {
   const date = new Date(timestamp);
@@ -9,12 +10,12 @@ const formatTimestamp = (timestamp: number) => {
 export function AlertHistory() {
   const alertHistory = useAppSelector(selectAlertHistory);
 
-  return <table>
+  return <table className={styles.table}>
     <thead>
       <tr>
       <th>Start</th>
       <th>End</th>
-      <th>Threshold</th>
+      <th>Settings</th>
       </tr>
     </thead>
     <tbody>
@@ -23,15 +24,26 @@ export function AlertHistory() {
       <tr key={alert.timestampStart}>
         <td>{formatTimestamp(alert.timestampStart)}</td>
         <td>{formatTimestamp(alert.timestampEnd as number)}</td>
-        <td>{alert.threshold}</td>
+        <td>{alert.threshold} load, {alert.alertDelta / 1000 / 60} min</td>
       </tr>
       )
-      :
+        : <>
       <tr>
         <td>N/A</td>
         <td>N/A</td>
         <td>N/A</td>
       </tr>
+      <tr>
+        <td>N/A</td>
+        <td>N/A</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td>N/A</td>
+        <td>N/A</td>
+        <td>N/A</td>
+      </tr>
+      </>
     }
     </tbody>
   </table>
