@@ -25,5 +25,5 @@ export function Threshold() {
     }
   };
 
-  return <input step="0.1" min="0.1" max="1" type="range" onChange={onChange} />;
+  return <input step="0.1" min="0.1" max="1" type="range" value={value} onChange={onChange} />;
 }

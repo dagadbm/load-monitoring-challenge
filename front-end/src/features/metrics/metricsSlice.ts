@@ -7,10 +7,10 @@ import { ScatterDataPoint } from 'chart.js';
 const MAX_SAMPLES = 60;
 
 // every 10 seconds (approximately)
-const POOLING_RATE = 10 * 1000;
+export const POOLING_RATE = 10 * 1000;
 
 // minimum delta to raise alert
-const MINIMUM_ALERT_DELTA = 120 * 1000;
+export const MINIMUM_ALERT_DELTA = 120 * 1000;
 
 export const DEFAULT_THRESHOLD = 0.7;
 
@@ -74,10 +74,13 @@ export const metricsSlice = createSlice({
           x: timestamp,
           y: loadAverage,
         });
+
+        // Never store more than MAX_SAMPLES
         if (state.cpuAverage.length > MAX_SAMPLES) {
           state.cpuAverage.shift();
         }
 
+        // high load is starting
         if (loadAverage >= state.threshold) {
           if (!state.alert) {
             state.alert = {
@@ -91,7 +94,9 @@ export const metricsSlice = createSlice({
           if (timestamp - state.alert.timestampStart >= MINIMUM_ALERT_DELTA) {
             state.alertStatus = AlertStatus.start;
           }
+        // high load is ending
         } else if (loadAverage < state.threshold) {
+          // we only do anything if we had an alert before
           if (state.alert) {
             state.alert.timestampEnd = timestamp;
 

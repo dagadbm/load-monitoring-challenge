@@ -20,7 +20,7 @@ export function AlertHistory() {
     <tbody>
     {alertHistory.length
       ? alertHistory.map((alert) =>
-      <tr>
+      <tr key={alert.timestampStart}>
         <td>{formatTimestamp(alert.timestampStart)}</td>
         <td>{formatTimestamp(alert.timestampEnd as number)}</td>
         <td>{alert.threshold}</td>

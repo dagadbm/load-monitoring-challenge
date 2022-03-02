@@ -3,13 +3,26 @@ import { Chart } from './Chart';
 import { Threshold } from './Threshold';
 import { AlertHistory } from './AlertHistory';
 import { Notification } from './Notification';
-import styles from './index.module.css';
+import styles from './Metrics.module.css';
 
-import { selectThreshold, } from './metricsSlice';
-import { useAppSelector } from '../../app/hooks';
+import {
+  poolCPUAverageAsync,
+  fetchCPUAverageAsync,
+  selectThreshold,
+} from './metricsSlice';
+import { useAppSelector, useAppDispatch } from '../../app/hooks';
 
 export function Metrics() {
+  const dispatch = useAppDispatch();
   const threshold = useAppSelector(selectThreshold);
+
+  React.useEffect(() => {
+    // get the first data point
+    dispatch(fetchCPUAverageAsync());
+    // pool the others
+    dispatch(poolCPUAverageAsync());
+  }, [dispatch]);
+
   return (
     <div className={styles.container}>
       <div className={styles.info}>

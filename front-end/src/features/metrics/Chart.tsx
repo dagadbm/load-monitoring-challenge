@@ -4,30 +4,19 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chartjs-adapter-date-fns';
 
 import {
-  poolCPUAverageAsync,
-  fetchCPUAverageAsync,
   selectCPUAverage,
   selectThreshold,
 } from './metricsSlice';
-import { useAppSelector, useAppDispatch } from '../../app/hooks';
+import { useAppSelector } from '../../app/hooks';
 
 ChartJS.register(annotationPlugin);
 
 export function Chart() {
   const dataPoints = useAppSelector(selectCPUAverage);
   const threshold = useAppSelector(selectThreshold);
-  const dispatch = useAppDispatch();
 
   // use a ref to store the chart instance since it it mutable
   const chartRef = useRef<ChartJS | null>(null);
-
-  React.useEffect(() => {
-    // get the first data point
-    dispatch(fetchCPUAverageAsync());
-    // pool the others
-    dispatch(poolCPUAverageAsync());
-  }, [dispatch]);
-
 
   // callback creates the chart on the canvas element
   const canvasCallback = (canvas: HTMLCanvasElement | null) => {
@@ -89,7 +78,7 @@ export function Chart() {
 
   // update chart data
   useEffect(() => {
-    if (chartRef.current) {
+    if (chartRef.current?.data) {
       chartRef.current.data.datasets[0].data = dataPoints;
       chartRef.current.update();
     }
@@ -98,8 +87,8 @@ export function Chart() {
   // update chart threshold line
   useEffect(() => {
     // must verify that the chart exists
-    if (chartRef.current) {
-      const annotations = chartRef.current?.options?.plugins?.annotation?.annotations;
+    if (chartRef.current?.options) {
+      const annotations = chartRef.current.options.plugins?.annotation?.annotations;
       if (annotations) {
         // @ts-expect-error
         annotations.threshold.value = threshold;
@@ -107,7 +96,6 @@ export function Chart() {
       }
     }
   }, [threshold]);
-
 
   return <canvas ref={canvasCallback}></canvas>;
 }
