@@ -124,6 +124,11 @@ export const metricsSlice = createSlice({
         }
       })
       .addCase(poolCPUAverageAsync.fulfilled, (state, action) => {
+        // avoid pending intervals
+        if (state.poolingId !== null) {
+          window.clearInterval(state.poolingId);
+        }
+
         state.poolingId = action.payload;
       })
       .addCase(stopPooling, (state) => {
