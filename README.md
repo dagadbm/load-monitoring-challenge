@@ -3,11 +3,15 @@
 Recommended node version: 16.14.0
 
 Install dependencies
+
 `npm i --prefix back-end`
+
 `npm i --prefix front-end`
 
 Run each project in a separate terminal or append an `&` at the end of each command
+
 `npm run start --prefix front-end`
+
 `npm run start --prefix back-end`
 
 # Architecture
@@ -43,6 +47,15 @@ The code can be a bit more complex to reason about because there are different s
 I decided to use a mixture of scss and modules to get the best of both worlds.
 I am not sure if this is what everyone uses now a days but I think it created a nice separation, even though styled components would probably be better.
 I decided to use very basic css (e.g. no frameworks) on purpose. I also decided to be as semantic as I could in terms of HTML.
+
+
+## Alerting
+
+I only throw an alert when the timestamp is equal or more than the provided alert delta.
+Every time the user decides to change the alert or threshold configuration I reset the current alerts.
+I also only count an alert to its log history after it has resolved.
+Hence if the CPU exceeds the threshold for 10 minutes it will still only count as one "incident" and not 10 / alertDeltaMinutes incidents.
+
 
 ## Tests
 
