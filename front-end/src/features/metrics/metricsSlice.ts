@@ -28,6 +28,7 @@ interface Alert {
   timestampStart: number,
   timestampEnd: number | null,
   threshold: number,
+  alertDelta: number,
 }
 
 export enum AlertStatus {
@@ -84,6 +85,11 @@ export const metricsSlice = createSlice({
           state.cpuAverage.shift();
         }
 
+        // if we had an alert before, we reset it
+        if(state.alertStatus === AlertStatus.end) {
+          state.alertStatus = AlertStatus.none;
+        }
+
         // high load is starting
         if (loadAverage >= state.threshold) {
           if (!state.alert) {
@@ -91,6 +97,7 @@ export const metricsSlice = createSlice({
               timestampStart: timestamp,
               timestampEnd: null,
               threshold: state.threshold,
+              alertDelta: state.alertDelta,
             };
             state.alertStatus = AlertStatus.none;
           }
@@ -104,6 +111,7 @@ export const metricsSlice = createSlice({
           if (state.alert) {
             state.alert.timestampEnd = timestamp;
 
+            // we only re-notify if the user had been notified before
             if(state.alertStatus === AlertStatus.start) {
               state.alertHistory.push(state.alert);
               state.alert = null;
@@ -141,7 +149,7 @@ export const metricsSlice = createSlice({
 
 export const selectCPUAverage = (state: RootState) => state.metrics.cpuAverage;
 export const selectThreshold = (state: RootState) => state.metrics.threshold;
-export const selectAlertDelta = (state: RootState) => state.metrics.alertDelta;
+export const selectAlertDeltaMinutes = (state: RootState) => state.metrics.alertDelta / 60 / 1000;
 export const selectAlertStatus = (state: RootState) => state.metrics.alertStatus;
 export const selectAlertHistory = (state: RootState) => state.metrics.alertHistory;
 

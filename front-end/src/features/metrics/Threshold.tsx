@@ -8,7 +8,7 @@ import { useAppDispatch, useDebounce } from '../../app/hooks';
 export function Threshold() {
   const [value, setValue] = useState<number>(DEFAULT_THRESHOLD);
   const dispatch = useAppDispatch();
-  const debouncedThreshold: number = useDebounce<number>(value, 1000);
+  const debouncedThreshold: number = useDebounce<number>(value, 700);
 
   useEffect(() => {
     dispatch(setThreshold(debouncedThreshold));

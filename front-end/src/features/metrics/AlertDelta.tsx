@@ -8,7 +8,7 @@ import { useAppDispatch, useDebounce } from '../../app/hooks';
 export function AlertDelta() {
   const [value, setValue] = useState<number>(DEFAULT_ALERT_DELTA / 1000);
   const dispatch = useAppDispatch();
-  const debouncedAlertDelta: number = useDebounce<number>(value, 1000);
+  const debouncedAlertDelta: number = useDebounce<number>(value, 700);
 
   useEffect(() => {
     dispatch(setAlertDelta(debouncedAlertDelta * 1000));

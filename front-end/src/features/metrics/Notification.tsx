@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ReactComponent as NotificationIcon } from 'notification.svg';
+
 import {
   AlertStatus,
   selectAlertStatus,
   selectThreshold,
+  selectAlertDeltaMinutes,
 } from './metricsSlice';
 import { useAppSelector } from '../../app/hooks';
 
@@ -26,24 +29,72 @@ function sendNotification(message: string) {
 export function Notification() {
   const alertStatus = useAppSelector(selectAlertStatus);
   const threshold = useAppSelector(selectThreshold);
+  const alertDeltaMinutes = useAppSelector(selectAlertDeltaMinutes);
+  const [showIcon, setShowIcon] = useState(false);
+  const [canNotify, setCanNotify] = useState(false);
 
-  const handleClick = () => {
-    window.Notification.requestPermission();
-  }
-
-  useEffect(() => {
-    switch (alertStatus) {
-      case AlertStatus.start:
-        sendNotification(`Your CPU has been over ${threshold} load for 2 minutes or more`);
+  const handlePermissionState = (state: PermissionState) => {
+    switch (state) {
+      case 'granted':
+        setShowIcon(false);
+        setCanNotify(true);
         break;
-      case AlertStatus.end:
-        sendNotification(`Your CPU has recovered from ${threshold} load`);
+      case 'denied':
+        setShowIcon(false);
+        setCanNotify(false);
         break;
-      case AlertStatus.none:
-        default:
+      case 'prompt':
+        setShowIcon(true);
+        setCanNotify(false);
+        break;
+      default:
         break;
     }
-  }, [alertStatus, threshold]);
+  };
+  // setup notifications permissions change logic
+  useEffect(() => {
+    if (navigator.permissions) {
+      navigator.permissions.query({ name:'notifications' }).then((status) => {
+        handlePermissionState(status.state);
+        status.onchange = () => handlePermissionState(status.state);
+      });
+    }
+  }, []);
 
-  return <button type='button' onClick={handleClick}>Notify me</button>
+  const handleClick = () => {
+    try {
+      window.Notification.requestPermission();
+    } catch (e) {
+      // support safari
+      // reference: https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API
+      window.Notification.requestPermission((permission) => {
+        // safari does not support navigator.permissions.query so we need this extra check here
+        // it wont auto update the icon as the other solution but it will still work
+        setShowIcon(false);
+        if (permission === 'granted') {
+          setCanNotify(true);
+        }
+      });
+    }
+  }
+
+  // send notifications
+  useEffect(() => {
+    if (canNotify) {
+      switch (alertStatus) {
+        case AlertStatus.start:
+          sendNotification(`Your CPU has been over ${threshold} load for over ${alertDeltaMinutes} minutes or more`);
+          break;
+        case AlertStatus.end:
+          sendNotification(`Your CPU has recovered from ${threshold} load`);
+          break;
+        case AlertStatus.none:
+        default:
+          break;
+      }
+    }
+  }, [canNotify, alertStatus, alertDeltaMinutes, threshold]);
+
+  return showIcon ? <NotificationIcon data-testid="notification" onClick={handleClick}/>
+    : null;
 }
