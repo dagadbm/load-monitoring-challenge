@@ -83,7 +83,7 @@ export function Notification() {
     if (canNotify) {
       switch (alertStatus) {
         case AlertStatus.start:
-          sendNotification(`Your CPU has been over ${threshold} load for over ${alertDeltaMinutes} minutes or more`);
+          sendNotification(`Your CPU has been over ${threshold} load for over ${alertDeltaMinutes} minute(s) or more`);
           break;
         case AlertStatus.end:
           sendNotification(`Your CPU has recovered from ${threshold} load`);

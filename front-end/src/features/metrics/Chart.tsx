@@ -87,8 +87,8 @@ export function Chart() {
   // update chart threshold line
   useEffect(() => {
     // must verify that the chart exists
-    if (chartRef.current?.options) {
-      const annotations = chartRef.current.options.plugins?.annotation?.annotations;
+    if (chartRef.current) {
+      const annotations = chartRef.current.options?.plugins?.annotation?.annotations;
       if (annotations) {
         // @ts-expect-error
         annotations.threshold.value = threshold;

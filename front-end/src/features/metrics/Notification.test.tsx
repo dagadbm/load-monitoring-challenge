@@ -59,7 +59,7 @@ test('notifies if an alert happened', async () => {
   await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 2 minutes or more');
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 2 minute(s) or more');
   })
 
   mockApi({
@@ -134,6 +134,6 @@ test('notify with custom alert delta', async () => {
   store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 0.5 minutes or more');
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 0.5 minute(s) or more');
   })
 });

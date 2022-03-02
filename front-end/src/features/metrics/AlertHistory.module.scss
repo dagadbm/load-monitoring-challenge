@@ -2,19 +2,18 @@
   text-align: left;
 
   thead {
+    background-color: #7EB26D;
+    color: black;
     th {
-      background-color: #7EB26D;
-      color: black;
       padding: 16px;
     }
   }
 
   tbody {
+    background-color: #c8e3c0;
+    color: black;
     td {
       padding: 16px;
-      background-color: #c8e3c0;
-      color: black;
     }
-    tr:nth-child(even){background-color: #f2f2f2;}
   }
 }

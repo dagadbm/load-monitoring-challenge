@@ -5,8 +5,15 @@ import styles from './AlertHistory.module.scss';
 
 const formatTimestamp = (timestamp: number) => {
   const date = new Date(timestamp);
-  return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  return `${
+    date.getHours().toString().padStart(2, '0')
+  }:${
+    date.getMinutes().toString().padStart(2, '0')
+  }:${
+    date.getSeconds().toString().padStart(2, '0')
+  }`;
 }
+
 export function AlertHistory() {
   const alertHistory = useAppSelector(selectAlertHistory);
 
@@ -28,16 +35,6 @@ export function AlertHistory() {
       </tr>
       )
         : <>
-      <tr>
-        <td>N/A</td>
-        <td>N/A</td>
-        <td>N/A</td>
-      </tr>
-      <tr>
-        <td>N/A</td>
-        <td>N/A</td>
-        <td>N/A</td>
-      </tr>
       <tr>
         <td>N/A</td>
         <td>N/A</td>

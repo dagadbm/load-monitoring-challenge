@@ -36,7 +36,7 @@ export function Metrics() {
           <Threshold />
         </div>
         <div className={styles.alertDelta}>
-          <h2>Load over {alertDeltaMinutes} minutes</h2>
+          <h2>Load over {alertDeltaMinutes} minute(s)</h2>
           <AlertDelta />
         </div>
         <div className={styles.currentAlert}>
