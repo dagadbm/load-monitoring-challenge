@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ReactComponent as NotificationIcon } from 'notification.svg';
+import styles from './Notification.module.scss';
 
 import {
   AlertStatus,
@@ -95,6 +96,6 @@ export function Notification() {
     }
   }, [canNotify, alertStatus, alertDeltaMinutes, threshold]);
 
-  return showIcon ? <NotificationIcon data-testid="notification" onClick={handleClick}/>
+  return showIcon ? <NotificationIcon className={styles.icon} data-testid="notification" onClick={handleClick}/>
     : null;
 }

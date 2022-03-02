@@ -32,11 +32,11 @@ export function Metrics() {
     <div className={styles.container}>
       <div className={styles.setup}>
         <div className={styles.threshold}>
-          <h2>CPU load {threshold}</h2>
+          <h2>When {threshold} CPU load</h2>
           <Threshold />
         </div>
         <div className={styles.alertDelta}>
-          <h2>Load over {alertDeltaMinutes} minute(s)</h2>
+          <h2>Alert after {alertDeltaMinutes} minute(s)</h2>
           <AlertDelta />
         </div>
         <div className={styles.currentAlert}>

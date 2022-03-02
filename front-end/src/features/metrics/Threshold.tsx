@@ -20,5 +20,5 @@ export function Threshold() {
     setValue(threshold);
   };
 
-  return <input step="0.1" min="0.1" max="1" type="range" value={value} onChange={onChange} title={`${value}`} />;
+  return <input step="0.1" min="0.1" max="1" type="range" value={value} onChange={onChange} title={`${value} CPU load`} />;
 }
