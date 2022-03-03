@@ -99,7 +99,7 @@ export const metricsSlice = createSlice({
         });
 
         // Never store more than 10 minutes worth of data
-        while(Date.now() - state.cpuAverage[0].x >= MAX_TIME_DELTA) {
+        while(timestamp - state.cpuAverage[0].x >= MAX_TIME_DELTA) {
           state.cpuAverage.shift();
         }
 

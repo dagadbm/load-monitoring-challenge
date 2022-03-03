@@ -66,7 +66,6 @@ test('full notification cycle', async () => {
   await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    // change to NOT BE CALLED 2nd time
     expect(window.Notification).not.toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 1 load');
   })
 
