@@ -23,7 +23,13 @@ export function CurrentAlert() {
       case AlertStatus.end: {
         setCurrentAlert('CPU has recovered');
         // after a while we reset the message
-        setTimeout(() => setCurrentAlert('No alerts in progress'), 3000);
+        setTimeout(() => setCurrentAlert('No alerts in progress'), 1000);
+        break;
+      }
+      case AlertStatus.reset: {
+        setCurrentAlert('Alert settings have been reset.');
+        // after a while we reset the message
+        setTimeout(() => setCurrentAlert('No alerts in progress'), 1000);
         break;
       }
       case AlertStatus.none:

@@ -20,5 +20,5 @@ export function AlertDelta() {
       setValue(alertDelta);
   }
 
-  return <input step="30" min="30" max="300" type="range" value={value} onChange={onChange} title={`${value/60} minute(s)`} />;
+  return <input step="30" min="30" max="240" type="range" value={value} onChange={onChange} title={`${value/60} minute(s)`} />;
 }

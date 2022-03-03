@@ -49,6 +49,7 @@ export enum AlertStatus {
   none = 'NONE',
   start = 'START',
   end = 'END',
+  reset = 'RESET',
 }
 
 const initialState: MetricsState = {
@@ -177,7 +178,7 @@ export const metricsSlice = createSlice({
         state.alertStartAfterDelta = null;
         state.alertEndBeforeDelta = null;
         state.alertEndAfterDelta = null;
-        state.alertStatus = AlertStatus.none;
+        state.alertStatus = AlertStatus.reset;
       })
       .addCase(setAlertDelta, (state, action) => {
         state.alertDelta = action.payload;
@@ -186,7 +187,7 @@ export const metricsSlice = createSlice({
         state.alertStartAfterDelta = null;
         state.alertEndBeforeDelta = null;
         state.alertEndAfterDelta = null;
-        state.alertStatus = AlertStatus.none;
+        state.alertStatus = AlertStatus.reset;
       })
       .addDefaultCase(() => {})
   },
