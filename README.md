@@ -20,6 +20,8 @@ Run each project in a separate terminal or append an `&` at the end of each comm
 I have decided to completely separate the front-end from the back-end.
 This allows for better separation in terms of teams and tech stack in the future. (Assuming the API doesnt change ofc).
 
+The remaining folder structure is what is given by fastify cli and cra cli so I used their templates as examples.
+
 ## API
 
 I decided to create a separate metrics API endpoint on the back-end which can
@@ -66,3 +68,10 @@ I even installed sinon fake timers but I just couldn't get a working example goi
 Although the code coverage is not too high, and not everything was tested.
 I think the most important features were tested.
 The most important test is being done on Notification.test.tsx.
+
+## Production Readiness
+
+The code can always be improved.
+I could have a better more separate folder structure. More catchy UI/UX. Better time display handling (0.5 minutes).
+Probably handle some edge cases around the timestamps being exact giving room for a small epsilon timestamp to its not exact.
+The back-end of course in production could not be used because that would assume the user would have a server running.
