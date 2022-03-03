@@ -60,6 +60,9 @@ Hence if the CPU exceeds the threshold for 10 minutes it will still only count a
 ## Tests
 
 I tried to make the tests as more integration as I could without mocking anything.
-The exception is of course ChartJS.
+The exception is of course ChartJS and the setInterval pooling logic.
+I tried to get a full integration test working but I couldn't do it.
+I even installed sinon fake timers but I just couldn't get a working example going.
 Although the code coverage is not too high, and not everything was tested.
 I think the most important features were tested.
+The most important test is being done on Notification.test.tsx.
