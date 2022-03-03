@@ -1,20 +1,32 @@
 import React from 'react';
 import { Notification } from './Notification';
-import { render, waitFor, screen, user, mockApi } from 'test-utils';
+import { render, waitFor, screen, user, mockFetchCPUAverage } from 'test-utils';
 import {
   DEFAULT_ALERT_DELTA,
   fetchCPUAverageAsync,
   setThreshold,
   setAlertDelta,
+  DEFAULT_THRESHOLD,
 } from './metricsSlice';
 
 let restoreNotification: any;
 beforeAll(() => {
   restoreNotification = window.Notification as any;
 });
+
 afterAll(() => {
   window.Notification = restoreNotification;
 });
+
+beforeEach(() => {
+  // @ts-expect-error
+  window.Notification = jest.fn();
+  // @ts-expect-error
+  window.Notification.permission = 'granted';
+});
+
+const TIMESTAMP = 100000000000000;
+const THRESHOLD = 0.7;
 
 test('prompt Notification', async () => {
   const requestPermission = jest.fn().mockReturnValue(true);
@@ -31,109 +43,136 @@ test('prompt Notification', async () => {
   });
 });
 
-test('notifies if an alert happened', async () => {
-  // @ts-expect-error
-  window.Notification = jest.fn();
-  // @ts-expect-error
-  window.Notification.permission = 'granted';
-
+test('full notification cycle', async () => {
   const { store } = render(<Notification />);
 
   expect(window.Notification).not.toHaveBeenCalled();
 
-  store.dispatch(setThreshold(0.5));
-  mockApi({
-    timestamp: 100000000000000,
-    loadAverage: 0.5,
-  });
+  mockFetchCPUAverage(TIMESTAMP, DEFAULT_THRESHOLD + 0.1);
   await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
     expect(window.Notification).not.toHaveBeenCalled();
   })
 
-  mockApi({
-    timestamp: 100000000000000 + DEFAULT_ALERT_DELTA,
-    loadAverage: 0.5,
-  });
+  mockFetchCPUAverage(TIMESTAMP + DEFAULT_ALERT_DELTA, DEFAULT_THRESHOLD + 0.1);
   await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 2 minute(s) or more');
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 1 load for over 2 minute(s) or more');
   })
 
-  mockApi({
-    timestamp: 100000000000000 + DEFAULT_ALERT_DELTA + 1,
-    loadAverage: 0.4,
-  });
-  store.dispatch(fetchCPUAverageAsync());
+  mockFetchCPUAverage(TIMESTAMP + DEFAULT_ALERT_DELTA + (DEFAULT_ALERT_DELTA / 2), DEFAULT_THRESHOLD - 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 0.5 load');
+    // change to NOT BE CALLED 2nd time
+    expect(window.Notification).not.toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 1 load');
+  })
+
+  mockFetchCPUAverage(TIMESTAMP + DEFAULT_ALERT_DELTA + (DEFAULT_ALERT_DELTA / 2) + DEFAULT_ALERT_DELTA, DEFAULT_THRESHOLD - 0.2);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 1 load');
   })
 });
 
 test('does not notify if cpu load does not last more than 2 minutes', async () => {
-  // @ts-expect-error
-  window.Notification = jest.fn();
-  // @ts-expect-error
-  window.Notification.permission = 'granted';
-
   const { store } = render(<Notification />);
 
   expect(window.Notification).not.toHaveBeenCalled();
 
-  store.dispatch(setThreshold(0.5));
-  mockApi({
-    timestamp: 100000000000000,
-    loadAverage: 0.5,
-  });
-  store.dispatch(fetchCPUAverageAsync());
+  const customThreshold = 0.5;
+
+  store.dispatch(setThreshold(customThreshold));
+  mockFetchCPUAverage(TIMESTAMP, customThreshold);
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
     expect(window.Notification).not.toHaveBeenCalled();
   })
 
-  mockApi({
-    timestamp: 100000000000000 + DEFAULT_ALERT_DELTA - 1,
-    loadAverage: 0.5,
-  });
-  store.dispatch(fetchCPUAverageAsync());
+  mockFetchCPUAverage(TIMESTAMP + DEFAULT_ALERT_DELTA - 1, customThreshold + 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
     expect(window.Notification).not.toHaveBeenCalled();
   })
 });
 
-test('notify with custom alert delta', async () => {
-  // @ts-expect-error
-  window.Notification = jest.fn();
-  // @ts-expect-error
-  window.Notification.permission = 'granted';
-
+test('does not notify if cpu load oscilates between up and down for no more than alertDelta', async () => {
   const { store } = render(<Notification />);
 
   expect(window.Notification).not.toHaveBeenCalled();
 
-  store.dispatch(setThreshold(0.5));
-  store.dispatch(setAlertDelta(30 * 1000));
-  mockApi({
-    timestamp: 100000000000000,
-    loadAverage: 0.5,
-  });
-  store.dispatch(fetchCPUAverageAsync());
+  const customAlertDelta = 30 * 1000;
+  const customThreshold = 0.7;
+  store.dispatch(setThreshold(customThreshold));
+  store.dispatch(setAlertDelta(customAlertDelta));
+
+  mockFetchCPUAverage(TIMESTAMP, customThreshold + 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
     expect(window.Notification).not.toHaveBeenCalled();
   })
 
-  mockApi({
-    timestamp: 100000000000000 + 30 * 1000,
-    loadAverage: 0.5,
-  });
-  store.dispatch(fetchCPUAverageAsync());
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta - 1, customThreshold + 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
 
   await waitFor(() =>  {
-    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.5 load for over 0.5 minute(s) or more');
+    expect(window.Notification).not.toHaveBeenCalled();
   })
+
+  // this will just reset the curret peak, no notification should be sent
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2, customThreshold - 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).not.toHaveBeenCalled();
+  })
+
+  // start a new peak
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2 + 1, customThreshold + 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).not.toHaveBeenCalled();
+  })
+
+  // accept it
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2 + 1 + customAlertDelta, customThreshold + 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).toHaveBeenNthCalledWith(1, 'Your CPU has been over 0.7 load for over 0.5 minute(s) or more');
+  })
+
+  // try to recover
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2 + 1 + customAlertDelta + 1, customThreshold - 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  expect(window.Notification).not.toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 0.7 load');
+
+  // go up again (reseting previous state)
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2 + 1 + customAlertDelta + 1 + 1, customThreshold + 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  expect(window.Notification).not.toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 0.7 load');
+
+  // go down again starting
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2 + 1 + customAlertDelta + 1 + 1 + 1, customThreshold - 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  expect(window.Notification).not.toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 0.7 load');
+
+  // finally recover
+  mockFetchCPUAverage(TIMESTAMP + customAlertDelta * 2 + 1 + customAlertDelta + 1 + 1 + 1 + customAlertDelta, customThreshold - 0.1);
+  await store.dispatch(fetchCPUAverageAsync());
+
+  await waitFor(() =>  {
+    expect(window.Notification).toHaveBeenNthCalledWith(2, 'Your CPU has recovered from 0.7 load');
+  })
+
 });

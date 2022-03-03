@@ -11,10 +11,17 @@ const server = setupServer();
 const user = userEvent.setup();
 
 function mockApi(json: object) {
-  server.use(rest.get(process.env.REACT_APP_API_CPU_LOAD_URL as string
-  ,
-    (_, res, ctx) => res.once(ctx.json(json)))
+  server.use(rest.get(
+    process.env.REACT_APP_API_CPU_LOAD_URL as string,
+    (_, res, ctx) => res.once(ctx.json(json))),
   );
+}
+
+function mockFetchCPUAverage(timestamp: number, loadAverage: number) {
+  mockApi({
+    timestamp,
+    loadAverage,
+  });
 }
 
 function render(
@@ -35,4 +42,4 @@ function render(
 }
 
 export * from '@testing-library/react';
-export { rest, server, render, user, mockApi };
+export { rest, server, render, user, mockApi, mockFetchCPUAverage };

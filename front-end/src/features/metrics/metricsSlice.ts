@@ -3,8 +3,7 @@ import { RootState } from '../../app/store';
 import { fetchCPUAverage } from './metricsAPI';
 import { ScatterDataPoint } from 'chart.js';
 
-// 10 minutes worth of samples
-const MAX_SAMPLES = 60;
+const MAX_TIME_DELTA = 60 * 10 * 1000;
 
 // every 10 seconds (approximately)
 export const POOLING_RATE = 10 * 1000;
@@ -12,21 +11,36 @@ export const POOLING_RATE = 10 * 1000;
 // minimum delta to raise alert
 export const DEFAULT_ALERT_DELTA = 120 * 1000;
 
-export const DEFAULT_THRESHOLD = 0.7;
+export const DEFAULT_THRESHOLD = 1;
 
 interface MetricsState {
+  // data set
   cpuAverage: ScatterDataPoint[],
+
+  // setInterval id
   poolingId: number | null,
+
+  // user configuration
   threshold: number,
   alertDelta: number,
-  alert: Alert | null,
+
+  // to mark the first/last occurences of alerts
+  // before/after taking into account the alertDelta
+  alertStartBeforeDelta: number | null,
+  alertStartAfterDelta: number | null,
+  alertEndBeforeDelta: number | null,
+  alertEndAfterDelta: number | null,
+
+  // for notifications
   alertStatus: AlertStatus,
+
+  // to store history of alerts
   alertHistory: Alert[],
 }
 
 interface Alert {
   timestampStart: number,
-  timestampEnd: number | null,
+  timestampEnd: number,
   threshold: number,
   alertDelta: number,
 }
@@ -41,7 +55,10 @@ const initialState: MetricsState = {
   cpuAverage: [],
   poolingId: null,
   threshold: DEFAULT_THRESHOLD,
-  alert: null,
+  alertStartBeforeDelta: null,
+  alertStartAfterDelta: null,
+  alertEndBeforeDelta: null,
+  alertEndAfterDelta: null,
   alertDelta: DEFAULT_ALERT_DELTA,
   alertStatus: AlertStatus.none,
   alertHistory: [],
@@ -80,46 +97,61 @@ export const metricsSlice = createSlice({
           y: loadAverage,
         });
 
-        // Never store more than MAX_SAMPLES
-        if (state.cpuAverage.length > MAX_SAMPLES) {
+        // Never store more than 10 minutes worth of data
+        while(Date.now() - state.cpuAverage[0].x >= MAX_TIME_DELTA) {
           state.cpuAverage.shift();
         }
 
-        // if we had an alert before, we reset it
-        if(state.alertStatus === AlertStatus.end) {
-          state.alertStatus = AlertStatus.none;
+        // logic to handle over threshold
+        if (loadAverage > state.threshold) {
+          // if we were starting to finish an alert, we cancel it
+          if (state.alertEndBeforeDelta && !state.alertEndAfterDelta) {
+            state.alertEndBeforeDelta = null;
+          }
+
+          // if we already had a threshold start lets see if we can trigger it
+          if (state.alertStartBeforeDelta) {
+            if (timestamp - state.alertStartBeforeDelta >= state.alertDelta) {
+              state.alertStartAfterDelta = timestamp;
+              state.alertStatus = AlertStatus.start;
+            }
+          // else we start one
+          } else {
+              state.alertStartBeforeDelta = timestamp;
+          }
         }
 
-        // high load is starting
-        if (loadAverage >= state.threshold) {
-          if (!state.alert) {
-            state.alert = {
-              timestampStart: timestamp,
-              timestampEnd: null,
-              threshold: state.threshold,
-              alertDelta: state.alertDelta,
-            };
-            state.alertStatus = AlertStatus.none;
+        // logic to handle under threshold
+        if (loadAverage < state.threshold) {
+          // if we were starting an alert, we cancel it
+          if (state.alertStartBeforeDelta && !state.alertStartAfterDelta) {
+            state.alertStartBeforeDelta = null;
           }
 
-          if (timestamp - state.alert.timestampStart >= state.alertDelta) {
-            state.alertStatus = AlertStatus.start;
-          }
-        // high load is ending
-        } else if (loadAverage < state.threshold) {
-          // we only do anything if we had an alert before
-          if (state.alert) {
-            state.alert.timestampEnd = timestamp;
+          // if we already had a threshold start lets see if we can recover from it
+          if (state.alertEndBeforeDelta) {
+            if (timestamp - state.alertEndBeforeDelta >= state.alertDelta) {
 
-            // we only re-notify if the user had been notified before
-            if(state.alertStatus === AlertStatus.start) {
-              state.alertHistory.push(state.alert);
-              state.alert = null;
+              state.alertEndAfterDelta = timestamp;
               state.alertStatus = AlertStatus.end;
-            } else {
-              state.alert = null;
-              state.alertStatus = AlertStatus.none;
+
+              // store the alertHistory since it has finished
+              state.alertHistory.push({
+                timestampStart: state.alertStartBeforeDelta as number,
+                timestampEnd: state.alertEndAfterDelta as number,
+                threshold: state.threshold,
+                alertDelta: state.alertDelta,
+              })
+
+              // reset alert state
+              state.alertStartBeforeDelta = null;
+              state.alertStartAfterDelta = null;
+              state.alertEndBeforeDelta = null;
+              state.alertEndAfterDelta = null;
             }
+          // else we start one if we are on an alert
+          } else if (state.alertStartAfterDelta) {
+              state.alertEndBeforeDelta = timestamp;
           }
         }
       })
@@ -140,12 +172,20 @@ export const metricsSlice = createSlice({
       })
       .addCase(setThreshold, (state, action) => {
         state.threshold = action.payload;
-        state.alert = null;
+        // reset alert state
+        state.alertStartBeforeDelta = null;
+        state.alertStartAfterDelta = null;
+        state.alertEndBeforeDelta = null;
+        state.alertEndAfterDelta = null;
         state.alertStatus = AlertStatus.none;
       })
       .addCase(setAlertDelta, (state, action) => {
         state.alertDelta = action.payload;
-        state.alert = null;
+        // reset alert state
+        state.alertStartBeforeDelta = null;
+        state.alertStartAfterDelta = null;
+        state.alertEndBeforeDelta = null;
+        state.alertEndAfterDelta = null;
         state.alertStatus = AlertStatus.none;
       })
       .addDefaultCase(() => {})
